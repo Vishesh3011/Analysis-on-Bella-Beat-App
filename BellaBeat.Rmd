@@ -1,0 +1,118 @@
+---
+title: "Bella Beat"
+author: "Vishesh Modi"
+date: "27/10/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+<style type="text/css">
+  body{
+  font-family: Roboto-Mono;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Libraries used
+
+So the libraries I've used for my case study are tidyverse, lubridate and ggplot
+
+```{r libraries}
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(tibble)
+options(scipen = 100)
+```
+
+### Dataframes
+
+The data frames used to make the analysis has information about dailyActivites, sleepDay merged and weightLogInfo_merged.
+
+```{r df}
+setwd("D:/Data Analysis/Case Study - bellaBeat/Fitabase Data 4.12.16-5.12.16")
+df1 <- read_csv("dailyActivity_merged.csv")
+df2 <- read_csv("sleepDay_merged.csv")
+df3 <- read.csv("weightLogInfo_merged.csv")
+```
+### Some Basic Info about the data frame 1
+```{r}
+colnames(df1)
+head(df1) %>% select(Id, ActivityDate, Calories)
+```
+### Some Basic Info about the data frame 2
+```{r}
+colnames(df2)
+head(df2) %>% select(Id, SleepDay, TotalHoursAsleep)
+```
+
+### Some Basic Info about the data frame 3
+```{r}
+colnames(df3)
+head(df3) %>% select(Id, Date,WeightKg)
+```
+### Now renaming some column names
+
+```{r}
+df1 <- plyr :: rename(df1, c("ActivityDate" = "Date"))
+df2 <- plyr :: rename(df2, c("SleepDay" = "Date"))
+```
+### Drop Unecessary Columns
+```{r}
+df1 <- select(df1, Id, Date, Calories)
+df2 <- select(df2, Id, Date, TotalHoursAsleep)
+df3 <- select(df3, Id, Date, WeightKg)
+colnames(df1)
+colnames(df2)
+colnames(df3)
+```
+### Check for number of rows and unique data
+```{r}
+n_distinct(df1$Id)
+n_distinct(df2$Id)
+n_distinct(df3$Id)
+```
+
+
+### Now merging the dataset will help to elimate the extra data
+```{r}
+df4 <- merge(df2, df1, by = "Id")
+df5 <- merge(df4, df3, by = "Id")
+head(df5)
+```
+### Some conversions into categories
+```{r}
+df5 <- df5 %>% 
+  mutate(sleepCategories = case_when(
+    TotalHoursAsleep >6 & TotalHoursAsleep <= 8 ~ "6h-8h",
+    TotalHoursAsleep > 8 ~ "> 8h",
+    TRUE ~ "< 6h"
+  ))
+```
+
+
+ 
+### Some Data Visualizations
+```{r}
+ggplot(data = df5) + geom_smooth(mapping = aes(x = TotalHoursAsleep, y = WeightKg), color = 'darkgreen') + labs(title = "Comparision of Total Hours Slept VS Weight In Kg", x = "Total Hours Slepts", y = "Weight In KG")
+
+ggplot(data = df5) + geom_col(mapping = aes(x = sleepCategories, y = Calories, fill = sleepCategories)) + labs(title = "Different Categories of Sleeping Time v Calories in KG", x = "Sleep Categories", y = "Calories")
+
+```
+
+### Summary
+1. There are two graphs showing relationships of Total Hours Slept v Weight In KG and Sleep categories v Calories burnt.
+2. The first one shows that the person who sleeps between 6 - 8hrs is healthier when compared to person who sleeps less           than 6 hrs and more than 8hrs
+3. The second one shows that the person who sleeps between between 6 - 8hrs lose burns more calories when compared to person      who sleeps less than 6 hrs and more than 8hrs.
+
+### Recommendations
+1. So there's a clear relationship between weight and sleep and calories and sleep, so the app should focus more on giving tips and motivate it's users that why a healthy sleep is required for human body.
+2. The app should also feature functions to track sleeping activities like when is the best time to sleep, provide exclusive alarm features to wake up early.
+
+
